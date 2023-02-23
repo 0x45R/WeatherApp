@@ -1,4 +1,4 @@
-const APIKEY = "ENTER YOUR API KEY" 
+const APIKEY = "9038f0c5ea035eff1d8ba4a8fd1adc93" // I use freemium openweathermap so idc and I really do not want to bother with doing it properly
 const APPLANGUAGE = "en"
 
 export class Clock extends HTMLElement{

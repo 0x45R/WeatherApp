@@ -46,8 +46,10 @@ export class WeatherWidget extends HTMLElement{
     console.log(data)
     this.querySelector("weather-city-name").innerHTML = data.name
 
+    this.querySelector("weather-time-info").innerHTML = `Right now in`
+
     let regionNames = new Intl.DisplayNames([APPLANGUAGE], {type: 'region'});
-    this.querySelector("weather-country").innerHTML = regionNames.of(data.country)
+    this.querySelector("weather-country").innerHTML = ` ${data.state}, <b>${regionNames.of(data.country)}</b>`
   }
 
   assignWeatherData(data){
@@ -108,32 +110,24 @@ export class WeatherWidget extends HTMLElement{
 
 connectedCallback(){
     this.innerHTML = `
-      <weather-header>
-        <weather-type>today</weather-type>     
-        <weather-popup type='settings'><i class="ti ti-settings"></i></weather-popup>
-      </weather-header>
-      <weather-container>
-        <weather-city-info>
-          <weather-city-name><placeholder/></weather-city-name>
-          <weather-country><placeholder style='width: 5em'/></weather-country>
-        </weather-city-info>
-        <weather-icon></weather-icon>
-        <weather-info>
-          <weather-title><placeholder style="width: 7em"/></weather-title>
-          <weather-caption>
-            <weather-temperature><placeholder style='width: 13em'/></weather-temperature>
-            <weather-wind><placeholder style='width: 13em;'/></weather-wind>
-            <weather-pressure><placeholder/></weather-pressure>
-            <weather-humidity><placeholder/></weather-humidity>
-            <weather-clouds><placeholder/></weather-clouds>
-          </weather-caption>
-        </weather-info>
-      </weather-container>
-      <weather-footer>
-        <weather-popup type='previous'><i class="ti ti-arrow-left"></i></weather-popup>       
-        <weather-popup-clock>21:37</weather-popup-clock>
-        <weather-popup type='next'><i class="ti ti-arrow-right"></i></weather-popup>
-      </weather-footer>
+    <weather-container>
+      <weather-city-info>
+        <weather-time-info><placeholder style='width: 6em;'></weather-time-info>
+        <weather-city-name><placeholder/></weather-city-name>
+        <weather-country><placeholder style='width: 13em; height: 3em;'/></weather-country>
+      </weather-city-info>
+      <weather-icon></weather-icon>
+      <weather-info>
+        <weather-title><placeholder style="width: 7em"/></weather-title>
+        <weather-caption>
+          <weather-temperature><placeholder style='width: 13em'/></weather-temperature>
+          <weather-wind><placeholder style='width: 13em;'/></weather-wind>
+          <weather-pressure><placeholder style="width: 4em"/></weather-pressure>
+          <weather-humidity><placeholder style="width: 4.5em"/></weather-humidity>
+          <weather-clouds><placeholder style="width: 4em"/></weather-clouds>
+        </weather-caption>
+      </weather-info>
+    </weather-container>
     `;
 
     navigator.geolocation.getCurrentPosition((position) => {

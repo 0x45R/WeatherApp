@@ -6,6 +6,27 @@
   box-sizing: border-box;
 }
 
+.weather-slider{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  height: 100%;
+  width: 100%;
+  gap: 1em;  padding: 1em;
+  overflow-x: hidden;
+}
+
+.menu-buttons{
+  width: 8em;
+  height: 2em;
+  background: red;
+  position: absolute;
+  right: 1em;
+  bottom: 1em;
+  border-radius: 20px;
+}
+
 weather-widget{
   display: flex; 
   flex-flow: column nowrap;
@@ -21,8 +42,6 @@ weather-container{
   flex-flow: column nowrap;
   align-items: center;
   justify-items: center;
-  border-bottom-right-radius: 0px;
-  border-bottom-left-radius: 0px;
 }
 
 weather-header{
@@ -63,7 +82,6 @@ weather-popup-clock{
   background-color: var(--darkest-background-color);
   border-radius: 1em;
   position: sticky;
-  z-index: -1;
   padding: 0.5em;
   font-weight: 300;
   text-transform: lowercase;
@@ -81,7 +99,6 @@ weather-popup{
   background-color: var(--darkest-background-color);
   border-radius: 1em;
   position: sticky;
-  z-index: -1;
   padding: 0.5em;
   font-weight: 300;
   text-transform: lowercase;
@@ -89,13 +106,17 @@ weather-popup{
   justify-content: center;
   align-items: center;
   pointer-events:auto;
+  transition: 0.5s all;
+}
+
+weather-popup:hover{
+  background: var(--darker-background-color);
 }
 
 weather-type{
   background-color: var(--darkest-background-color);
   border-radius: 1em;
   position: sticky;
-  z-index: -1;
   border-bottom-right-radius: 0em;
   border-bottom-left-radius: 0em;
   padding: 0.5em;
@@ -107,12 +128,10 @@ weather-type{
 weather-header>*{
   border-bottom-right-radius: 0em;
   border-bottom-left-radius: 0em;
- transform: translateY(15px);
 } 
 weather-footer> *{
   border-top-right-radius: 0em;
   border-top-left-radius: 0em;
-  transform: translateY(-15px);
 }
 
 weather-city-info{
@@ -138,6 +157,10 @@ weather-title{
   text-transform: capitalize;
   display: flex;
   justify-content: center;
+  max-width: 13em;
+}
+
+weather-country{
   max-width: 13em;
 }
 
@@ -172,10 +195,8 @@ weather-icon{
 body{
   width: 100vw;
   height: 100vh;
-
   display: flex;
   flex-flow: column nowrap;
-  gap: 1em;
   justify-content: center;
   align-items: center;
 

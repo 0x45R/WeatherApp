@@ -1,5 +1,5 @@
 const APIKEY = "9038f0c5ea035eff1d8ba4a8fd1adc93" // I use freemium openweathermap so idc and I really do not want to bother with doing it properly
-const APPLANGUAGE = "en"
+const APPLANGUAGE = navigator.language || navigator.userLanguage
 
 export class Clock extends HTMLElement{
   constructor(){
@@ -27,6 +27,12 @@ export class WeatherIcon extends HTMLElement{
     let url = `https://openweathermap.org/img/wn/${value}@4x.png`
     document.querySelector("link[rel='icon']").setAttribute('href', url)
     this.style.backgroundImage = `url(${url})`;
+    this.style.backgroundSize = "100% 100%"
+  }
+  
+  set backgroundImage(value){
+    this.style.backgroundImage = `url(${value})`;
+    this.style.backgroundSize = "100% 100%"
   }
 
 }
@@ -38,10 +44,10 @@ export class WeatherWidget extends HTMLElement{
  
   assignCityData(data){
     console.log(data)
-    this.querySelector("weather-city-name").innerText = data.name
+    this.querySelector("weather-city-name").innerHTML = data.name
 
     let regionNames = new Intl.DisplayNames([APPLANGUAGE], {type: 'region'});
-    this.querySelector("weather-country").innerText = regionNames.of(data.country)
+    this.querySelector("weather-country").innerHTML = regionNames.of(data.country)
   }
 
   assignWeatherData(data){
@@ -56,11 +62,24 @@ export class WeatherWidget extends HTMLElement{
   }
 
   displayError(error){
-
+    this.querySelector('weather-icon').backgroundImage  = "img/failed.webp"
   }
 
   fetchCityData(cityName){
     let geocodingApiRequest = fetch(`https://api.openweathermap.org/geo/1.0/direct?q=${cityName}&limit=1&appid=${APIKEY}`)
+    .then((response)=> response.json())
+    .then((data) => {
+        this.assignCityData(data[0]);
+        this.fetchWeatherData(data[0])
+      }
+    )
+    .catch((error) => {
+      this.displayError(error)
+    })
+  }
+
+  reverseFetchCityData(data){
+    let geocodingApiRequest = fetch(`https://api.openweathermap.org/geo/1.0/reverse?lat=${data.lat}&lon=${data.lon}&limit=1&appid=${APIKEY}`)
     .then((response)=> response.json())
     .then((data) => {
         this.assignCityData(data[0]);
@@ -87,7 +106,7 @@ export class WeatherWidget extends HTMLElement{
     })
   }
 
-  connectedCallback(){
+connectedCallback(){
     this.innerHTML = `
       <weather-header>
         <weather-type>today</weather-type>     
@@ -95,18 +114,18 @@ export class WeatherWidget extends HTMLElement{
       </weather-header>
       <weather-container>
         <weather-city-info>
-          <weather-city-name>Opole</weather-city-name>
-          <weather-country>Poland</weather-country>
+          <weather-city-name><placeholder/></weather-city-name>
+          <weather-country><placeholder style='width: 5em'/></weather-country>
         </weather-city-info>
         <weather-icon></weather-icon>
         <weather-info>
-          <weather-title>Moderate Rain</weather-title>
+          <weather-title><placeholder style="width: 7em"/></weather-title>
           <weather-caption>
-            <weather-temperature>0C, odczuwalna 20C</weather-temperature>
-            <weather-wind>10m/s 360deg 10m/s</weather-wind>
-            <weather-pressure>20 hPa</weather-pressure>
-            <weather-humidity>30%</weather-humidity>
-            <weather-clouds>10%</weather-clouds>
+            <weather-temperature><placeholder style='width: 13em'/></weather-temperature>
+            <weather-wind><placeholder style='width: 13em;'/></weather-wind>
+            <weather-pressure><placeholder/></weather-pressure>
+            <weather-humidity><placeholder/></weather-humidity>
+            <weather-clouds><placeholder/></weather-clouds>
           </weather-caption>
         </weather-info>
       </weather-container>
@@ -116,12 +135,12 @@ export class WeatherWidget extends HTMLElement{
         <weather-popup type='next'><i class="ti ti-arrow-right"></i></weather-popup>
       </weather-footer>
     `;
-  
 
-    let cityName = "Opole"
-
-    this.fetchCityData(cityName);
-
+    navigator.geolocation.getCurrentPosition((position) => {
+      let data = {lat:position.coords.latitude, lon: position.coords.longitude}
+      console.log(data)
+      this.reverseFetchCityData(data);
+    }, this.displayError("Give this site access to your location in order for app to work"), {enableHighAccuracy: true});
   }
 }
 

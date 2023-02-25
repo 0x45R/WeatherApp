@@ -82,6 +82,14 @@ export class WeatherWidget extends HTMLElement{
     this.querySelector('weather-icon').icon =  data.weather[0].icon
   }
 
+  assignData(data){
+    this.getCityByLocation(data) // Get city by user position
+    .then((city)=>{this.assignCityData(city[0])})
+
+    this.getWeatherByLocation(data) // Get weather by user position
+    .then((weather)=>{this.assignWeatherData(weather)})
+  }
+
   connectedCallback(){
     this.innerHTML = `
     <weather-container>
@@ -104,27 +112,21 @@ export class WeatherWidget extends HTMLElement{
     </weather-container>
     `;
 
-    var position;
-
     this.getPosition() // Try to get user position using geolocation api
     .then((data)=>{ // If user accepted the popup and everything went good 
-      position = data; // We know position and can use it later
+      this.assignData(data); // We know position and we can assign data
     })
-    .catch(()=>{ // If user denied the popup
+    .catch((err)=>{ // If user denied the popup
+      if(err.code != 1){
+        return;
+      }
       this.getIP() // Get user ip
       .then((ip)=>{ // If successfully got user ip 
         this.getPositionFromIP(ip)
         .then((data)=>{ // Try to get position from ip 
-          position = data; // We know position and can use it later
+          this.assignData(data); // We know position and we can assign data
         })
       })
-    })
-    .finally(()=>{ // Finally if everything went right and we've got user's position
-      this.getCityByLocation(position) // Get city by user position
-      .then((city)=>{this.assignCityData(city[0])})
-
-      this.getWeatherByLocation(position) // Get weather by user position
-      .then((weather)=>{this.assignWeatherData(weather)})
     })
   }
 }

@@ -80,6 +80,24 @@ export class WeatherWidget extends HTMLElement{
     })
   }
 
+  fetchCityByIP(ipAddress){
+    let ipLocationRequest = fetch(`https://ipapi.co/${ipAddress}/json`, {headers: {"Content-Type":"application/json"}})
+    .then((response)=>response.json())
+    .then((data)=>{this.reverseFetchCityData({lon: data.longitude, lat: data.latitude});})
+    .catch((error) => {
+      this.displayError("Unexpected Error")
+    })   
+  }
+
+  fetchUserIP(){
+    let ipAddressRequest = fetch("https://ifconfig.me/ip", {headers: {"Content-Type":"application/json"}})
+    .then((response)=>response.text())
+    .then((data)=>this.fetchCityByIP(data))
+    .catch((error) => {
+      this.displayError("Unexpected error")
+    })
+  }
+
   reverseFetchCityData(data){
     let geocodingApiRequest = fetch(`https://api.openweathermap.org/geo/1.0/reverse?lat=${data.lat}&lon=${data.lon}&limit=1&appid=${APIKEY}`)
     .then((response)=> response.json())
@@ -118,12 +136,12 @@ connectedCallback(){
       </weather-city-info>
       <weather-icon></weather-icon>
       <weather-info>
-        <weather-title><placeholder style="width: 7em"/></weather-title>
+        <weather-title><placeholder/></weather-title>
         <weather-caption>
           <weather-temperature><placeholder style='width: 13em'/></weather-temperature>
           <weather-wind><placeholder style='width: 13em;'/></weather-wind>
           <weather-pressure><placeholder style="width: 4em"/></weather-pressure>
-          <weather-humidity><placeholder style="width: 4.5em"/></weather-humidity>
+          <weather-humidity><placeholder style="width: 4em"/></weather-humidity>
           <weather-clouds><placeholder style="width: 4em"/></weather-clouds>
         </weather-caption>
       </weather-info>
@@ -134,7 +152,7 @@ connectedCallback(){
       let data = {lat:position.coords.latitude, lon: position.coords.longitude}
       console.log(data)
       this.reverseFetchCityData(data);
-    }, this.displayError("Give this site access to your location in order for app to work"), {enableHighAccuracy: true});
+    }, ()=> this.fetchUserIP(), {enableHighAccuracy: true}); //  this.displayError("Give this site access to your location in order for app to work")
   }
 }
 

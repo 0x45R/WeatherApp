@@ -189,9 +189,7 @@ weather-icon{
   height: 7em;
   display: block;
   background-color: var(--darkest-background-color);
-  background-position: center;
   background-repeat: no-repeat;
-  background-size: 100%;
   border-radius: 50%;
   margin: 1em;
 
@@ -213,6 +211,7 @@ body{
 
   font-family: "Poppins";
 
+  --warning-foreground-color: rgb(255,216,0);
   --foreground-color: rgb(120,120,120);
   --darker-foreground-color: rgb(80,80,80);
   --background-color: rgb(70,70,70);

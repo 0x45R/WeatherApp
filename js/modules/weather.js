@@ -1,19 +1,6 @@
 const APIKEY = "9038f0c5ea035eff1d8ba4a8fd1adc93" // I use freemium openweathermap so idc and I really do not want to bother with doing it properly
 const APPLANGUAGE = navigator.language || navigator.userLanguage
 
-export class Clock extends HTMLElement{
-  constructor(){
-    super();  
-  }
-
-  connectedCallback(){
-    let date = new Date();  
-    let hh = new String(date.getHours()).padStart(2,'0');
-    let mm = new String(date.getMinutes()).padStart(2,'0');
-    this.innerText = `${hh}:${mm}`
-  }
-}
-
 export class WeatherIcon extends HTMLElement{
   constructor(){
     super();
@@ -32,7 +19,9 @@ export class WeatherIcon extends HTMLElement{
   
   set backgroundImage(value){
     this.style.backgroundImage = `url(${value})`;
-    this.style.backgroundSize = "100% 100%"
+    this.style.backgroundSize = "80% 80%";
+    this.style.backgroundPosition = "center";
+    this.style.animation = "none";
   }
 
 }
@@ -41,92 +30,59 @@ export class WeatherWidget extends HTMLElement{
   constructor(){
     super();
   }
- 
-  assignCityData(data){
-    console.log(data)
-    this.querySelector("weather-city-name").innerHTML = data.name
 
+  displayError(error){
+    this.querySelector('weather-icon').backgroundImage  = "img/warning.svg"
+  }
+
+  async getPosition(){
+    const response = await new Promise((res, rej) => {
+      navigator.geolocation.getCurrentPosition(res, rej, {enableHighAccuracy: true});
+    })
+    return response.coords
+  } 
+
+  async getWeatherByLocation(data){
+    const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?appid=${APIKEY}&lat=${data.latitude}&lon=${data.longitude}&lang=${APPLANGUAGE}&units=metric`)
+    return response.json()
+  }
+
+  async getCityByLocation(data){
+    const response = await fetch(`https://api.openweathermap.org/geo/1.0/reverse?lat=${data.latitude}&lon=${data.longitude}&limit=1&appid=${APIKEY}`)    
+    return response.json()
+  }
+ 
+  async getIP(){
+    const response = await fetch("https://ifconfig.me/ip", {headers: {"Content-Type":"application/json"}})
+    return response.text()
+  }
+
+  async getPositionFromIP(ip){
+    const response = await fetch(`https://ipapi.co/${ip}/json`, {headers: {"Content-Type":"application/json"}})
+    return response.json()
+  }
+
+  assignCityData(data){
+    this.querySelector("weather-city-name").innerHTML = data.name
     this.querySelector("weather-time-info").innerHTML = `Right now in`
 
     let regionNames = new Intl.DisplayNames([APPLANGUAGE], {type: 'region'});
     this.querySelector("weather-country").innerHTML = ` ${data.state}, <b>${regionNames.of(data.country)}</b>`
   }
-
+  
   assignWeatherData(data){
-    console.log(data)
     this.querySelector('weather-title').innerText = data.weather[0].description
+
     this.querySelector('weather-temperature').innerHTML = `<i class="ti ti-temperature"></i> ${data.main.temp}&deg;C feels like ${data.main.feels_like}&deg;C`
     this.querySelector('weather-pressure').innerHTML =  `<i class="ti ti-gauge"></i> ${data.main.pressure}hPa`
     this.querySelector('weather-humidity').innerHTML = `<i class="ti ti-droplet"></i> ${data.main.humidity}%`
     this.querySelector('weather-clouds').innerHTML = `<i class="ti ti-cloud"></i> ${data.clouds.all}%`
     this.querySelector('weather-wind').innerHTML = `<i class="ti ti-windsock"></i> ${data.wind.speed}m/s ${data.wind.deg}deg`
+
     this.querySelector('weather-icon').icon =  data.weather[0].icon
   }
 
-  displayError(error){
-    this.querySelector('weather-icon').backgroundImage  = "img/failed.webp"
-  }
-
-  fetchCityData(cityName){
-    let geocodingApiRequest = fetch(`https://api.openweathermap.org/geo/1.0/direct?q=${cityName}&limit=1&appid=${APIKEY}`)
-    .then((response)=> response.json())
-    .then((data) => {
-        this.assignCityData(data[0]);
-        this.fetchWeatherData(data[0])
-      }
-    )
-    .catch((error) => {
-      this.displayError(error)
-    })
-  }
-
-  fetchCityByIP(ipAddress){
-    let ipLocationRequest = fetch(`https://ipapi.co/${ipAddress}/json`, {headers: {"Content-Type":"application/json"}})
-    .then((response)=>response.json())
-    .then((data)=>{this.reverseFetchCityData({lon: data.longitude, lat: data.latitude});})
-    .catch((error) => {
-      this.displayError("Unexpected Error")
-    })   
-  }
-
-  fetchUserIP(){
-    let ipAddressRequest = fetch("https://ifconfig.me/ip", {headers: {"Content-Type":"application/json"}})
-    .then((response)=>response.text())
-    .then((data)=>this.fetchCityByIP(data))
-    .catch((error) => {
-      this.displayError("Unexpected error")
-    })
-  }
-
-  reverseFetchCityData(data){
-    let geocodingApiRequest = fetch(`https://api.openweathermap.org/geo/1.0/reverse?lat=${data.lat}&lon=${data.lon}&limit=1&appid=${APIKEY}`)
-    .then((response)=> response.json())
-    .then((data) => {
-        this.assignCityData(data[0]);
-        this.fetchWeatherData(data[0])
-      }
-    )
-    .catch((error) => {
-      this.displayError(error)
-    })
-  }
-
-  fetchWeatherData(data){
-    let weatherApiRequest = fetch(`https://api.openweathermap.org/data/2.5/weather?appid=${APIKEY}&lat=${data.lat}&lon=${data.lon}&lang=${APPLANGUAGE}&units=metric`)
-    .then((response)=> response.json())
-    .then((data) => {
-        if(data.cod != "200"){
-          throw new Error("Not ok :(")
-        }
-        this.assignWeatherData(data)
-      }
-    )
-    .catch((error) => {
-      this.displayError(error)
-    })
-  }
-
-connectedCallback(){
+  connectedCallback(){
     this.innerHTML = `
     <weather-container>
       <weather-city-info>
@@ -148,14 +104,30 @@ connectedCallback(){
     </weather-container>
     `;
 
-    navigator.geolocation.getCurrentPosition((position) => {
-      let data = {lat:position.coords.latitude, lon: position.coords.longitude}
-      console.log(data)
-      this.reverseFetchCityData(data);
-    }, ()=> this.fetchUserIP(), {enableHighAccuracy: true}); //  this.displayError("Give this site access to your location in order for app to work")
+    var position;
+
+    this.getPosition() // Try to get user position using geolocation api
+    .then((data)=>{ // If user accepted the popup and everything went good 
+      position = data; // We know position and can use it later
+    })
+    .catch(()=>{ // If user denied the popup
+      this.getIP() // Get user ip
+      .then((ip)=>{ // If successfully got user ip 
+        this.getPositionFromIP(ip)
+        .then((data)=>{ // Try to get position from ip 
+          position = data; // We know position and can use it later
+        })
+      })
+    })
+    .finally(()=>{ // Finally if everything went right and we've got user's position
+      this.getCityByLocation(position) // Get city by user position
+      .then((city)=>{this.assignCityData(city[0])})
+
+      this.getWeatherByLocation(position) // Get weather by user position
+      .then((weather)=>{this.assignWeatherData(weather)})
+    })
   }
 }
 
 customElements.define("weather-widget", WeatherWidget)
 customElements.define("weather-icon", WeatherIcon)
-customElements.define("weather-popup-clock", Clock)
